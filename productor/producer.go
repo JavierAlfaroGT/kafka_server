@@ -1,16 +1,19 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	/*
 		El paquete gorilla/muximplementa un enrutador de solicitudes y un despachador para hacer coincidir las solicitudes entrantes con su respectivo controlador
 	*/
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/segmentio/kafka-go"
 	/*
 		Un puerto Go (golang) del proyecto Ruby dotenv (que carga env vars desde un archivo .env)
 	*/)
@@ -20,8 +23,11 @@ type Obj2 struct {
 }
 
 type Obj struct {
-	Id   string `json:"id"`
-	Data string `json:"data"` //json.RawMessage `json:"data"`
+	Team1 string `json:"team1"`
+	Team2 string `json:"team2"`
+	Score string `json:"score"`
+	Phase int    `json:"phase"`
+	//Data  json.RawMessage `json:"data"`
 }
 
 func failOnError(err error, msg string) {
@@ -50,15 +56,42 @@ ENDPOINT entre el balanceador y el microservicio
 */
 func createUser(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("content-type", "application/json")
-	var usr Obj2
-	json.NewDecoder((request.Body)).Decode(&usr) //paso del objetoJson a obj de golang
+	var partidos Obj2
+	json.NewDecoder((request.Body)).Decode(&partidos) //paso del objetoJson a obj de golang
 
 	//muestro q ya los tengo como objeto-golang
-	fmt.Println(">>>>>>>>>>>>>>>>>   ", usr.Lista[0].Id)
-	fmt.Println(">>>>>>>>>>>>>>>>>   ", usr.Lista[0].Data)
+	for i := 0; i < len(partidos.Lista); i++ {
+		fmt.Printf("Msg: %s vs %s (%s) fase:%d\n", partidos.Lista[i].Team1, partidos.Lista[i].Team2, partidos.Lista[i].Score, partidos.Lista[i].Phase)
+	}
+
+	//ahora q ya tengo los datos dentro de mi obj-go lo paso a []byte
+	b, _ := json.Marshal(partidos)
+	// muestra de q se convirtio a []byte
+	s := string(b)
+	fmt.Println("------------------------------\nJSON -> []BYTE \n", s)
+
+	send_message(b)
 
 	//retorno a postman thunder etc
-	json.NewEncoder(response).Encode(usr)
+	json.NewEncoder(response).Encode(partidos)
+}
+
+func send_message(datos []byte) {
+
+	//configuracion inicial
+	conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", "topic_test", 0)
+
+	if err != nil {
+		fmt.Printf(err.Error())
+		return
+	}
+
+	//configuracion de tiempo
+	conn.SetWriteDeadline(time.Now().Add(time.Second * 10))
+
+	//configuracion del mensaje a ingresar a kafka
+	conn.WriteMessages(kafka.Message{Value: datos})
+
 }
 
 /*
