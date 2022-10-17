@@ -60,6 +60,7 @@ func createUser(response http.ResponseWriter, request *http.Request) {
 	json.NewDecoder((request.Body)).Decode(&partidos) //paso del objetoJson a obj de golang
 
 	//muestro q ya los tengo como objeto-golang
+	fmt.Println("--------------------------------------------------------------------------------")
 	for i := 0; i < len(partidos.Lista); i++ {
 		fmt.Printf("Msg: %s vs %s (%s) fase:%d\n", partidos.Lista[i].Team1, partidos.Lista[i].Team2, partidos.Lista[i].Score, partidos.Lista[i].Phase)
 	}
@@ -68,7 +69,8 @@ func createUser(response http.ResponseWriter, request *http.Request) {
 	b, _ := json.Marshal(partidos)
 	// muestra de q se convirtio a []byte
 	s := string(b)
-	fmt.Println("------------------------------\nJSON -> []BYTE \n", s)
+	fmt.Printf(">>>\nJSON -> []BYTE:\n%s", s)
+	fmt.Println("--------------------------------------------------------------------------------")
 
 	send_message(b)
 

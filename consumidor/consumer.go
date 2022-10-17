@@ -29,12 +29,17 @@ func main() {
 
 	//       bytes := make([]byte, 1e6) //ojo con el tam 1e9 no lo soporta xd
 
+	contador := 1
+
 	for {
 		bytes := make([]byte, 1e3) //ojo con el tam 1e9 no lo soporta xd
 		_, err := batch.Read(bytes)
 		if err == nil {
-			fmt.Println("Msg:", string(bytes))
-			time.Sleep(1 * time.Second)
+			fmt.Println("--------------------------------------------------------------------------------")
+			fmt.Printf("\nMsg%d:%s\n", contador, string(bytes))
+			contador++
+			//fmt.Println("--------------------------------------------------------------------------------")
+			//time.Sleep(1 * time.Second)
 
 		} else { //error
 			break
