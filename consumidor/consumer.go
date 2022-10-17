@@ -3,9 +3,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -57,4 +60,23 @@ func main() {
 	if err := conn.Close(); err != nil {
 		log.Fatal("failed to close connection:", err)
 	}
+}
+
+func mongoInsert(datos string) { //fase beta
+	responseBody := bytes.NewBuffer([]byte(datos))
+
+	resp, err := http.Post("http://35.184.21.178:3200/", "application/json", responseBody)
+
+	if err != nil {
+		log.Printf("An Error Occured %v\n", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+	}
+	sb := string(body)
+	log.Printf(sb)
+
 }
